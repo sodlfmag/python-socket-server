@@ -1,0 +1,6 @@
+HTTP/1.1 200 OK
+Server: socketserver v0.1
+Content-Type: text/html
+Content-Length: 78
+
+<html><head><title>socket server</title></head><body>I've got your message</body></html>
