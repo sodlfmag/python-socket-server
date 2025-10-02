@@ -51,10 +51,14 @@ class SocketServer:
                             # 파일명 추출
                             filename = None
                             if b'filename=' in part:
-                                filename_start = part.find(b'filename="') + 11
-                                filename_end = part.find(b'"', filename_start)
-                                filename = part[filename_start:filename_end].decode()
-                                print(f"  Filename: {filename}")
+                                # Content-Disposition 라인에서 파일명 추출
+                                disposition_line = part.split(b'\r\n')[0]
+                                if b'filename="' in disposition_line:
+                                    filename_start = disposition_line.find(b'filename="') + 11
+                                    filename_end = disposition_line.find(b'"', filename_start)
+                                    if filename_end != -1:
+                                        filename = disposition_line[filename_start:filename_end].decode()
+                                        print(f"  Filename: {filename}")
                             
                             # Content-Type 확인
                             content_type = None
