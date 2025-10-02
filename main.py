@@ -33,38 +33,74 @@ class SocketServer:
                             break
                 
                 if boundary:
+                    print(f"Found boundary: {boundary.decode()}")
                     # boundary로 데이터 분할
                     parts = request_data.split(b'--' + boundary)
                     
-                    for part in parts:
-                        if b'Content-Type: image/' in part:
-                            # 이미지 데이터 추출
+                    for i, part in enumerate(parts):
+                        if b'Content-Disposition: form-data' in part:
+                            print(f"Processing part {i}:")
+                            
+                            # 필드명 추출
+                            if b'name=' in part:
+                                field_name_start = part.find(b'name="') + 6
+                                field_name_end = part.find(b'"', field_name_start)
+                                field_name = part[field_name_start:field_name_end].decode()
+                                print(f"  Field name: {field_name}")
+                            
+                            # 파일명 추출
+                            filename = None
+                            if b'filename=' in part:
+                                filename_start = part.find(b'filename="') + 11
+                                filename_end = part.find(b'"', filename_start)
+                                filename = part[filename_start:filename_end].decode()
+                                print(f"  Filename: {filename}")
+                            
+                            # Content-Type 확인
+                            content_type = None
+                            if b'Content-Type:' in part:
+                                ct_start = part.find(b'Content-Type:') + 14
+                                ct_end = part.find(b'\r\n', ct_start)
+                                content_type = part[ct_start:ct_end].strip().decode()
+                                print(f"  Content-Type: {content_type}")
+                            
+                            # 데이터 추출
                             header_end = part.find(b'\r\n\r\n')
                             if header_end != -1:
-                                image_data = part[header_end + 4:]
+                                data = part[header_end + 4:]
                                 # 마지막 boundary 제거
-                                if image_data.endswith(b'\r\n'):
-                                    image_data = image_data[:-2]
+                                if data.endswith(b'\r\n'):
+                                    data = data[:-2]
                                 
-                                if image_data:
+                                if data and content_type and b'image/' in content_type.encode():
                                     # 이미지 파일 확장자 결정
-                                    content_type_line = part.split(b'\r\n')[0]
-                                    if b'image/jpeg' in content_type_line or b'image/jpg' in content_type_line:
+                                    if 'image/jpeg' in content_type or 'image/jpg' in content_type:
                                         ext = '.jpg'
-                                    elif b'image/png' in content_type_line:
+                                    elif 'image/png' in content_type:
                                         ext = '.png'
-                                    elif b'image/gif' in content_type_line:
+                                    elif 'image/gif' in content_type:
                                         ext = '.gif'
                                     else:
                                         ext = '.bin'
                                     
                                     # 이미지 파일 저장
-                                    image_filename = f"{timestamp}_image{ext}"
+                                    if filename:
+                                        image_filename = f"{timestamp}_{filename}"
+                                    else:
+                                        image_filename = f"{timestamp}_image{ext}"
+                                    
                                     image_filepath = os.path.join(self.DIR_PATH, image_filename)
                                     
                                     with open(image_filepath, 'wb') as f:
-                                        f.write(image_data)
-                                    print(f"Image saved to: {image_filepath}")
+                                        f.write(data)
+                                    print(f"  Image saved to: {image_filepath}")
+                                elif data:
+                                    # 텍스트 필드 데이터 출력
+                                    try:
+                                        text_data = data.decode('utf-8')
+                                        print(f"  Text data: {text_data[:100]}...")
+                                    except:
+                                        print(f"  Binary data: {len(data)} bytes")
                                     
         except Exception as e:
             print(f"Error processing multipart data: {e}")

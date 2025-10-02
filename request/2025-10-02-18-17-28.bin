@@ -1,6 +1,0 @@
-POST / HTTP/1.1
-Host: 127.0.0.1:8000
-Content-Type: application/json
-Content-Length: 25
-
-{"message": "Hello Server"}

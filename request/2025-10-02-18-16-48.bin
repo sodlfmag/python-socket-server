@@ -1,9 +1,0 @@
-POST / HTTP/1.1
-User-Agent: Mozilla/5.0 (Windows NT; Windows NT 10.0; ko-KR) WindowsPowerShell/5.1.22621.5909
-Content-Type: application/json
-Host: 127.0.0.1:8000
-Content-Length: 27
-Expect: 100-continue
-Connection: Keep-Alive
-
-{"message": "Hello Server"}
